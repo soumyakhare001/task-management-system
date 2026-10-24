@@ -8,7 +8,7 @@ import AddTask from './components/AddTask.jsx';
 import EditTask from './components/EditTask.jsx';
 
  
-export const serverurl='http://localhost:1000'
+export const serverurl='https://task-management-system-5n39.onrender.com'
 function App() {
   
   return (
