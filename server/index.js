@@ -16,7 +16,6 @@ const allowedOrigins = [
   'https://task-management-system-five-pink.vercel.app'
 ];
 
-// Allow the production URL and matching Vercel preview URLs.
 const isAllowedOrigin = (origin) => {
   if (!origin) return true;
 
@@ -24,7 +23,7 @@ const isAllowedOrigin = (origin) => {
     return true;
   }
 
-  return /^https:\/\/task-management-system(?:-git-[a-z0-9-]+)?-soumyakhare0001-1304s-projects\.vercel\.app$/.test(origin);
+  return /^https:\/\/task-management-system(?:-[a-z0-9-]+)?-soumyakhare0001-1304s-projects\.vercel\.app$/.test(origin);
 };
 
 app.use(cors({
@@ -33,6 +32,7 @@ app.use(cors({
       return callback(null, true);
     }
 
+    console.error('Blocked CORS origin:', origin);
     return callback(new Error(`Origin not allowed by CORS: ${origin}`));
   },
   credentials: true,
