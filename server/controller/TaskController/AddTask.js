@@ -3,29 +3,38 @@ import { Task } from "../../models/TaskModel.js";
 
 export const AddTask = async (req, res) => {
   try {
-    const { TaskTittle, discription, periority, subject, status } = req.body;
+    const { TaskTittle, discription, periority, subject } = req.body;
 
-    if (!TaskTittle?.trim() || !periority) {
+    // Validate title
+    if (typeof TaskTittle !== "string" || !TaskTittle.trim()) {
       return res.status(400).json({
-        message: "Task title and priority are required",
+        message: "Task title is required",
       });
     }
 
-    const userId = req.userId;
+    // Validate priority
+    if (!["low", "medium", "high"].includes(periority)) {
+      return res.status(400).json({
+        message: "Priority must be low, medium, or high",
+      });
+    }
 
-    if (!userId) {
+    // Ensure the request belongs to an authenticated user
+    if (!req.userId) {
       return res.status(401).json({
-        message: "Unauthorized. Please log in.",
+        message: "Please log in to create a task",
       });
     }
 
+    // Create task with the authenticated user as owner
     const createTask = await Task.create({
       TaskTittle: TaskTittle.trim(),
-      discription,
+      discription:
+        typeof discription === "string" ? discription.trim() : "",
+      subject: typeof subject === "string" ? subject.trim() : "",
       periority,
-      subject,
-      status,
-      owner: userId,
+      owner: req.userId,
+      // status defaults to "pending" in the schema
     });
 
     return res.status(201).json({
@@ -34,6 +43,18 @@ export const AddTask = async (req, res) => {
     });
   } catch (error) {
     console.error("AddTask error:", error);
+
+    if (error.name === "ValidationError") {
+      return res.status(400).json({
+        message: error.message,
+      });
+    }
+
+    if (error.name === "CastError") {
+      return res.status(400).json({
+        message: "Invalid task data",
+      });
+    }
 
     return res.status(500).json({
       message: "Task could not be created",

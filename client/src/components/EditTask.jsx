@@ -1,4 +1,5 @@
-import { useState } from "react";
+
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import {
   FiEdit3,
@@ -11,15 +12,50 @@ import axios from "axios";
 import { serverurl } from "../App";
 
 function EditTask() {
-
   const navigate = useNavigate();
   const { id } = useParams();
+
   const [TaskTittle, settittle] = useState("");
   const [discription, setdisription] = useState("");
   const [subject, setsubject] = useState("");
   const [periority, setperiority] = useState("medium");
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
+  useEffect(() => {
+    const fetchTask = async () => {
+      if (!id) {
+        alert("Task ID missing.");
+        navigate("/show");
+        return;
+      }
 
+      try {
+        const response = await axios.get(
+          `${serverurl}/api/update/${id}`,
+          { withCredentials: true }
+        );
+
+        const task = response.data;
+
+        settittle(task.TaskTittle || "");
+        setdisription(task.discription || "");
+        setsubject(task.subject || "");
+        setperiority(task.periority || "medium");
+      } catch (error) {
+        console.error(
+          "Error fetching task:",
+          error.response?.data || error.message
+        );
+        alert(error.response?.data?.message || "Unable to fetch task.");
+        navigate("/show");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTask();
+  }, [id, navigate]);
 
   const UpdateHandeler = async (e) => {
     e.preventDefault();
@@ -30,15 +66,17 @@ function EditTask() {
     }
 
     if (!id) {
-      alert("Task ID missing. Editing cannot continue yet.");
+      alert("Task ID missing.");
       return;
     }
 
     try {
-      const response = await axios.patch(
+      setSaving(true);
+
+      await axios.patch(
         `${serverurl}/api/update/${id}`,
         {
-          TaskTittle,
+          TaskTittle: TaskTittle.trim(),
           discription,
           subject,
           periority,
@@ -46,18 +84,29 @@ function EditTask() {
         { withCredentials: true }
       );
 
-      console.log(response.data);
       navigate("/show");
     } catch (error) {
-      console.log(error.response?.data || error.message);
+      console.error(
+        "Error updating task:",
+        error.response?.data || error.message
+      );
       alert(error.response?.data?.message || "Unable to update task.");
+    } finally {
+      setSaving(false);
     }
   };
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#f5edff] text-[#766b91]">
+        Loading task...
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#f5edff] px-5 py-10">
       <div className="mx-auto w-full max-w-2xl">
-
-        {/* Back Button */}
         <button
           type="button"
           onClick={() => navigate("/show")}
@@ -67,10 +116,7 @@ function EditTask() {
           Back to All Tasks
         </button>
 
-        {/* Main Card */}
         <div className="overflow-hidden rounded-3xl bg-white shadow-[0_15px_50px_rgba(90,60,150,0.12)]">
-
-          {/* Header */}
           <div className="relative overflow-hidden bg-gradient-to-r from-[#816bf1] to-[#a78bfa] px-8 py-8 sm:px-10">
             <div className="absolute -right-8 -top-10 h-40 w-40 rounded-full bg-white/10" />
             <div className="absolute -bottom-12 right-24 h-32 w-32 rounded-full bg-white/10" />
@@ -94,10 +140,7 @@ function EditTask() {
             </div>
           </div>
 
-          {/* Form UI */}
-          <div className="space-y-6 px-6 py-8 sm:px-10">
-
-            {/* Task Title */}
+          <form onSubmit={UpdateHandeler} className="space-y-6 px-6 py-8 sm:px-10">
             <div>
               <label
                 htmlFor="title"
@@ -116,7 +159,6 @@ function EditTask() {
               />
             </div>
 
-            {/* Description */}
             <div>
               <label
                 htmlFor="description"
@@ -136,13 +178,13 @@ function EditTask() {
                 value={discription}
                 onChange={(e) => setdisription(e.target.value)}
                 className="w-full resize-none rounded-xl border border-[#e8e2f5] bg-[#fcfaff] px-4 py-3.5 text-sm text-[#30284b] outline-none transition placeholder:text-[#aaa2bd] focus:border-[#927cf5] focus:ring-4 focus:ring-[#927cf5]/10"
-              /><p>{discription.length}/200</p>
+              />
+              <p className="mt-1 text-right text-xs text-[#9689b1]">
+                {discription.length}/200
+              </p>
             </div>
 
-            {/* Subject and Priority */}
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-
-              {/* Subject */}
               <div>
                 <label
                   htmlFor="subject"
@@ -168,7 +210,6 @@ function EditTask() {
                 </div>
               </div>
 
-              {/* Priority */}
               <div>
                 <label
                   htmlFor="priority"
@@ -197,51 +238,38 @@ function EditTask() {
               </div>
             </div>
 
-            {/* Reminder */}
             <div className="flex items-start gap-3 rounded-xl border border-[#eee7ff] bg-[#f8f5ff] p-4">
               <span className="text-xl">💡</span>
-
               <div>
                 <p className="text-sm font-semibold text-[#5c46a5]">
                   Keep moving forward
                 </p>
-
                 <p className="mt-1 text-xs leading-5 text-[#82779e]">
-                  Update your priorities as you grow. Your plan should support your progress, not limit it.
+                  Update your priorities as you grow. Your plan should support
+                  your progress, not limit it.
                 </p>
               </div>
             </div>
 
-            {/* Buttons — UI Only */}
             <div className="flex flex-col-reverse gap-3 border-t border-[#f0ebf8] pt-6 sm:flex-row sm:justify-end">
-              <form
-                onSubmit={UpdateHandeler}
-                className="space-y-6 px-6 py-8 sm:px-10"
+              <button
+                type="button"
+                onClick={() => navigate("/show")}
+                className="rounded-xl border border-[#e8e2f5] px-6 py-3 text-sm font-semibold text-[#766b91] transition hover:bg-[#f8f5ff]"
               >
-                {/* Tumhare saare existing input fields aur reminder yahin rahenge */}
+                Cancel
+              </button>
 
-                {/* Buttons */}
-                <div className="flex flex-col-reverse gap-3 border-t border-[#f0ebf8] pt-6 sm:flex-row sm:justify-end">
-                  <button
-                    type="button"
-                    onClick={() => navigate("/show")}
-                    className="rounded-xl border border-[#e8e2f5] px-6 py-3 text-sm font-semibold text-[#766b91] transition hover:bg-[#f8f5ff]"
-                  >
-                    Cancel
-                  </button>
-
-                  <button
-                    type="submit"
-                    className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#816bf1] to-[#9b83fa] px-7 py-3 text-sm font-semibold text-white shadow-lg transition hover:-translate-y-0.5"
-                  >
-                    <FiSave size={17} />
-                    Save Changes
-                  </button>
-                </div>
-              </form>
+              <button
+                type="submit"
+                disabled={saving}
+                className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#816bf1] to-[#9b83fa] px-7 py-3 text-sm font-semibold text-white shadow-lg transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <FiSave size={17} />
+                {saving ? "Saving..." : "Save Changes"}
+              </button>
             </div>
-
-          </div>
+          </form>
         </div>
 
         <p className="mt-5 text-center text-xs text-[#9689b1]">

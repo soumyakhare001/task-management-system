@@ -1,33 +1,50 @@
-//what is owner-owner is the one who is allowed to see,update,deleted and add task apart from owner no one is allowed untill and unless you decide to let them
 
 import mongoose from "mongoose";
 
+const TaskSchema = new mongoose.Schema({
+  TaskTittle: {
+    type: String,
+    required: [true, "Task title is required"],
+    trim: true,
+    maxlength: [100, "Task title cannot exceed 100 characters"],
+  },
 
-const TaskSchema=new mongoose.Schema({
-    TaskTittle:{
-        type:String,
-        required:true,
-    },
-    discription:{
-        type:String,
-         maxlength: [200, "Description cannot exceed 200 characters"]
-    },
-    periority:{
-        type:String,
-        required:true
-    },
-    subject:{
-        type:String,
-        required:true
-    },
-    status:{
-        type:String,
-        default:"pending"
-    },
-    owner:{
-        type:mongoose.Schema.Types.ObjectId, // Types.ObjectId is used to store a unique ID that identifies a document in MongoDB.
-        ref:"User"
-    }
-})
+  discription: {
+    type: String,
+    trim: true,
+    maxlength: [200, "Description cannot exceed 200 characters"],
+    default: "",
+  },
 
-export const Task=mongoose.model("Task",TaskSchema);
+  periority: {
+    type: String,
+    required: [true, "Task priority is required"],
+    enum: {
+      values: ["low", "medium", "high"],
+      message: "Priority must be low, medium, or high",
+    },
+    default: "medium",
+  },
+
+  subject: {
+    type: String,
+    trim: true,
+    maxlength: [100, "Subject cannot exceed 100 characters"],
+    default: "",
+  },
+
+  status: {
+    type: String,
+    enum: ["pending", "completed"],
+    default: "pending",
+  },
+
+  owner: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: [true, "Task owner is required"],
+    index: true,
+  },
+});
+
+export const Task = mongoose.model("Task", TaskSchema);
