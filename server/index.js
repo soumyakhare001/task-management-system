@@ -9,9 +9,14 @@ dotenv.config();
 
 const app = express();
 app.use(express.json());
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://task-management-system-five-pink.vercel.app"
+];
+
 app.use(cors({
-    origin: "task-management-system-five-pink.vercel.app",
-    credentials: true
+  origin: allowedOrigins,
+  credentials: true
 }));
 
 app.use(cookieParser());
