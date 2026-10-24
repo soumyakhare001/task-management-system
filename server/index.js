@@ -12,6 +12,7 @@ app.use(express.json());
 const allowedOrigins = [
   "http://localhost:5173",
   "https://task-management-system-five-pink.vercel.app"
+   "https://task-management-system-7imna6jo1-soumyakhare0001-1304s-projects.vercel.app"
 ];
 
 app.use(cors({
