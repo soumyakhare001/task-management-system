@@ -23,7 +23,10 @@ const isAllowedOrigin = (origin) => {
     return true;
   }
 
-  return /^https:\/\/task-management-system(?:-[a-z0-9-]+)?-soumyakhare0001-1304s-projects\.vercel\.app$/.test(origin);
+  return (
+    origin.startsWith('https://task-management-system-') &&
+    origin.endsWith('-soumyakhare0001-1304s-projects.vercel.app')
+  );
 };
 
 app.use(cors({
