@@ -29,12 +29,12 @@ export const login = async (req, res) => {
         const token = genToken(existUser._id);
       
         //storing token into the cookie
-         res.cookie("token", token,{
-            httpOnly: true, 
-            secure: false,
-            sameSite: "strict",
-            maxAge: 7 * 24 * 60 * 60 * 1000
-        })
+       res.cookie("token", token, {
+  httpOnly: true,
+  secure: true,
+  sameSite: "none",
+  maxAge: 7 * 24 * 60 * 60 * 1000
+});
        
 
         return res.status(200).json({ message: "WELCOME BACK" });

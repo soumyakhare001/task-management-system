@@ -37,13 +37,17 @@ export const DeleteAccount = async (req, res) => {
        await Task.deleteMany({ owner: userId });
        await User.findByIdAndDelete(userId);
         //clearing the cookie
-        res.clearCookie("token", {
-            httpOnly: true,
-            secure: false,
-            sameSite: "strict"
-        });
+      res.clearCookie("token", {
+  httpOnly: true,
+  secure: true,
+  sameSite: "none"
+});
 
-        return res.status(200).json({ message: "Account got deleted" });
+return res.status(200).json({
+  message: "Account deleted successfully"
+});
+
+       
     } catch (error) {
         console.log(error.name, error.message);
         return res.status(500).json({ message: "could not delete the account" });

@@ -32,12 +32,12 @@ export const Signin = async (req, res) => {
         //creating a token and passing the user id to the function of gentoken
         const token = genToken(user._id);
         //storing token into the cookie
-        res.cookie("token", token,{
-            httpOnly: true,
-            secure: false,
-            sameSite: "strict",
-            maxAge: 7 * 24 * 60 * 60 * 1000
-        })
+       res.cookie("token", token, {
+  httpOnly: true,
+  secure: true,
+  sameSite: "none",
+  maxAge: 7 * 24 * 60 * 60 * 1000
+});
         return res.status(201).json({ message: "User got Created" });
     } catch (error) {
         console.log(error.name, error.message)

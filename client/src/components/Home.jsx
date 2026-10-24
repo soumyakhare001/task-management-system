@@ -13,8 +13,9 @@ function Home() {
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [accountMessage, setAccountMessage] = useState("");
+  const [accountLoading, setAccountLoading] = useState(false);
 
-  // Fetch the latest tasks from the existing API
   const getTasks = useCallback(async () => {
     setLoading(true);
 
@@ -24,7 +25,6 @@ function Home() {
         { withCredentials: true }
       );
 
-      // Same response structure as ShowTask.jsx
       if (Array.isArray(response.data)) {
         setTasks(response.data);
         setError("");
@@ -37,20 +37,88 @@ function Home() {
         "Fetch tasks failed:",
         err.response?.data || err.message
       );
+
+      if (err.response?.status === 401) {
+        navigate("/signin", { replace: true });
+        return;
+      }
+
       setError("Unable to load tasks. Please try again.");
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [navigate]);
 
-  // Refetch whenever the dashboard route becomes active
   useEffect(() => {
     if (location.pathname === "/home") {
       getTasks();
     }
   }, [location.pathname, getTasks]);
 
-  // Match the status saved by the backend completeTask controller
+  const handleLogout = async () => {
+    try {
+      setAccountLoading(true);
+      setAccountMessage("");
+
+      await axios.post(
+        `${serverurl}/api/logout`,
+        {},
+        { withCredentials: true }
+      );
+
+      navigate("/signin", { replace: true });
+    } catch (err) {
+      setAccountMessage(
+        err.response?.data?.message ||
+        "Logout failed. Please try again."
+      );
+    } finally {
+      setAccountLoading(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    const confirmed = window.confirm(
+      "Are you sure you want to permanently delete your account and all your tasks?"
+    );
+
+    if (!confirmed) return;
+
+    const Username = window.prompt(
+      "Enter your username to confirm account deletion:"
+    );
+
+    if (Username === null || !Username.trim()) return;
+
+    const password = window.prompt(
+      "Enter your password to confirm account deletion:"
+    );
+
+    if (password === null || !password) return;
+
+    try {
+      setAccountLoading(true);
+      setAccountMessage("");
+
+      await axios.delete(`${serverurl}/api/delete`, {
+        data: {
+          Username: Username.trim(),
+          password
+        },
+        withCredentials: true
+      });
+
+      navigate("/signin", { replace: true });
+    } catch (err) {
+      setAccountMessage(
+        err.response?.data?.message ||
+        "Account deletion failed. Please try again."
+      );
+    } finally {
+      setAccountLoading(false);
+    }
+  };
+
   const isCompleted = (task) =>
     String(task.status ?? "").trim().toLowerCase() === "completed";
 
@@ -58,7 +126,6 @@ function Home() {
   const completedTasks = tasks.filter(isCompleted).length;
   const pendingTasks = tasks.filter((task) => !isCompleted(task)).length;
 
-  // Show only pending High and Medium priority tasks
   const priorityTasks = tasks
     .filter(
       (task) =>
@@ -69,6 +136,7 @@ function Home() {
     )
     .sort((a, b) => {
       const priority = { high: 0, medium: 1 };
+
       return (
         priority[String(a.periority).trim().toLowerCase()] -
         priority[String(b.periority).trim().toLowerCase()]
@@ -81,20 +149,20 @@ function Home() {
       title: "Total Tasks",
       count: totalTasks,
       icon: <FiBookOpen size={22} />,
-      style: "bg-violet-100 text-violet-700",
+      style: "bg-violet-100 text-violet-700"
     },
     {
       title: "Pending Tasks",
       count: pendingTasks,
       icon: <span className="text-2xl">◷</span>,
-      style: "bg-amber-100 text-amber-700",
+      style: "bg-amber-100 text-amber-700"
     },
     {
       title: "Completed Tasks",
       count: completedTasks,
       icon: <FaCheck size={22} />,
-      style: "bg-emerald-100 text-emerald-700",
-    },
+      style: "bg-emerald-100 text-emerald-700"
+    }
   ];
 
   return (
@@ -117,13 +185,40 @@ function Home() {
             </p>
           </div>
 
-          <button
-            onClick={() => navigate("/addTask")}
-            className="self-start rounded-xl bg-violet-500 px-5 py-3 font-semibold text-white transition hover:bg-violet-600 sm:self-auto"
-          >
-            + Add Task
-          </button>
+          <div className="flex flex-wrap gap-3">
+            <button
+              onClick={() => navigate("/addTask")}
+              className="rounded-xl bg-violet-500 px-5 py-3 font-semibold text-white transition hover:bg-violet-600"
+            >
+              + Add Task
+            </button>
+
+            <button
+              onClick={handleLogout}
+              disabled={accountLoading}
+              className="rounded-xl border border-violet-200 px-4 py-3 font-semibold text-violet-700 transition hover:bg-violet-50 disabled:opacity-50"
+            >
+              {accountLoading ? "Please wait..." : "Logout"}
+            </button>
+
+            <button
+              onClick={handleDeleteAccount}
+              disabled={accountLoading}
+              className="rounded-xl border border-red-200 px-4 py-3 font-semibold text-red-600 transition hover:bg-red-50 disabled:opacity-50"
+            >
+              Delete Account
+            </button>
+          </div>
         </header>
+
+        {accountMessage && (
+          <p
+            role="alert"
+            className="mb-5 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-600"
+          >
+            {accountMessage}
+          </p>
+        )}
 
         {/* Summary Cards */}
         <section className="mb-9 grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -173,6 +268,7 @@ function Home() {
           ) : error ? (
             <div className="py-8 text-center">
               <p className="text-red-500">{error}</p>
+
               <button
                 onClick={getTasks}
                 className="mt-3 rounded-lg bg-violet-100 px-4 py-2 text-violet-700"
@@ -183,9 +279,11 @@ function Home() {
           ) : priorityTasks.length === 0 ? (
             <div className="py-10 text-center">
               <p className="text-4xl">🌷</p>
+
               <h3 className="mt-3 font-semibold">
                 No pending high or medium priority tasks
               </h3>
+
               <p className="mt-2 text-sm text-gray-500">
                 Your focus list will show your next priorities here.
               </p>
@@ -214,6 +312,7 @@ function Home() {
                       <span className="block truncate text-sm font-semibold text-gray-800">
                         {task.TaskTittle}
                       </span>
+
                       <span className="mt-1 block text-xs text-gray-500">
                         {task.subject || "General"}
                       </span>
