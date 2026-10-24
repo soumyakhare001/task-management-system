@@ -9,6 +9,8 @@ import { AddTask } from "../controller/TaskController/AddTask.js";
 import { ShowTask } from "../controller/TaskController/ShowTask.js";
 import { UpdateTask } from "../controller/TaskController/UpdateTask.js";
 import { DeleteTask } from "../controller/TaskController/DeleteTask.js";
+import { completeTask } from "../controller/TaskController/status.js";
+import { GetTaskById } from "../controller/TaskController/Gettask.js";
 
 
 
@@ -21,4 +23,6 @@ router.delete('/delete',AuthMiddleware,DeleteAccount);
 router.post('/addtask',AuthMiddleware,AddTask);
 router.get('/alltask',AuthMiddleware,ShowTask);
 router.patch('/update/:id',AuthMiddleware,UpdateTask);
+router.get('/update/:id',AuthMiddleware,GetTaskById);
 router.delete('/deletetask/:id',AuthMiddleware,DeleteTask);
+router.patch('/status/:id',AuthMiddleware,completeTask);

@@ -9,11 +9,20 @@ const TaskSchema=new mongoose.Schema({
         required:true,
     },
     discription:{
-        type:String
+        type:String,
+         maxlength: [200, "Description cannot exceed 200 characters"]
     },
     periority:{
         type:String,
         required:true
+    },
+    subject:{
+        type:String,
+        required:true
+    },
+    status:{
+        type:String,
+        default:"pending"
     },
     owner:{
         type:mongoose.Schema.Types.ObjectId, // Types.ObjectId is used to store a unique ID that identifies a document in MongoDB.
