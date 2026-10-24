@@ -15,7 +15,12 @@ import { GetTaskById } from "../controller/TaskController/Gettask.js";
 
 
 export const router=express.Router();
-
+router.get('/check-auth', AuthMiddleware, (req, res) => {
+    res.status(200).json({
+        isAuthenticated: true,
+        userId: req.userId
+    });
+});
 router.post('/signin',Signin);
 router.post('/login',login);
 router.post('/logout',logout);
