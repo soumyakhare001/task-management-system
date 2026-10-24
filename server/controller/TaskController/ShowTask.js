@@ -4,7 +4,7 @@ import { Task } from "../../models/TaskModel.js"
 
 export const ShowTask = async (req, res) => {
     try {
-        const Alltasks = await Task.find({ owner: req.userId }).select("TaskTittle discription periority");
+        const Alltasks = await Task.find({ owner: req.userId }).select("TaskTittle discription periority status");
         if (Alltasks.length == 0) {
             return res.status(200).json({ message: "you do not have any task" });
         }

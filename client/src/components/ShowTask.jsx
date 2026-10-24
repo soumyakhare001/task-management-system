@@ -5,6 +5,7 @@ import { serverurl } from '../App';
 import { FiBookOpen } from "react-icons/fi";
 import { Navigate, useNavigate } from 'react-router';
 import { FaCheck } from "react-icons/fa";
+
 function ShowTask() {
   const navigation = useNavigate();
   const [tasks, settasks] = useState([]);
@@ -15,7 +16,7 @@ function ShowTask() {
         serverurl + "/api/alltask",
         { withCredentials: true }
       );
-
+      console.log("Tasks after refresh:", response.data);
       settasks(response.data);
     } catch (error) {
       console.log(error.name, error.message);
@@ -33,25 +34,30 @@ function ShowTask() {
     } catch (error) {
       console.log(error.name, error.message);
     }
-
   }
 
   const StatusHandeler = async (id) => {
     try {
-      const taskstatus = await axios.patch(serverurl + `/api/status/${id}`, {}, { withCredentials: true });
-      console.log(taskstatus);
-      settasks((prevTasks)=>
-        prevTasks.map((task)=>
-          task._id===id?{...task,status:"completed"}:
-          task
-        )
+      const response = await axios.patch(
+        `${serverurl}/api/status/${id}`,
+        {},
+        { withCredentials: true }
       );
 
-    } catch (error) {
-      console.log(error.name, error.message);
-    }
+      // Use the actual updated task returned by the backend
+      const updatedTask = response.data;
 
-  }
+      settasks((prevTasks) =>
+        prevTasks.map((task) =>
+          task._id === id ? updatedTask : task
+        )
+      );
+    } catch (error) {
+      console.log(
+        error.response?.data || error.message
+      );
+    }
+  };
 
   return (
     <div className="min-h-screen w-full bg-purple-50 p-4 sm:p-6">
@@ -68,10 +74,22 @@ function ShowTask() {
               Every little steps takes you closer to your goals
             </p>
           </div>
-          <form action="" onSubmit={(e) => { e.preventDefault(); navigation('/addTask') }}> <button type='submit' className="w-fit rounded-xl bg-purple-200 px-4 py-3 text-purple-800 hover:bg-purple-300 cursor-pointer">
-            + Add New Task
-          </button></form>
 
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              onClick={() => navigation('/home')}
+              className="w-fit rounded-xl bg-purple-200 px-4 py-3 text-purple-800 hover:bg-purple-300 cursor-pointer"
+            >
+              ← Dashboard
+            </button>
+
+            <form action="" onSubmit={(e) => { e.preventDefault(); navigation('/addTask') }}>
+              <button type='submit' className="w-fit rounded-xl bg-purple-200 px-4 py-3 text-purple-800 hover:bg-purple-300 cursor-pointer">
+                + Add New Task
+              </button>
+            </form>
+          </div>
         </div>
 
         {/* Search */}
@@ -111,17 +129,15 @@ function ShowTask() {
                 </div>
 
                 {/* Title */}
-                <div className='flex min-w-0 items-start gap-2 justify-between'> <h2 className="line-clamp-2 break-words text-xl font-bold">
-                  {task.TaskTittle}
-                
-                 
+                <div className='flex min-w-0 items-start gap-2 justify-between'>
+                  <h2 className="line-clamp-2 break-words text-xl font-bold">
+                    {task.TaskTittle}
+                  </h2>
 
-                </h2> 
-                     {task.status === "completed" && (
+                  {String(task.status || "").trim().toLowerCase() === "completed" && (
                     <FaCheck className="shrink-0 text-xl text-green-500" />
                   )}
-                  </div>
-
+                </div>
 
                 <hr className="border-fuchsia-100" />
 
@@ -134,11 +150,11 @@ function ShowTask() {
 
                 {/* Buttons */}
                 <div className="mt-auto flex flex-wrap items-center justify-end gap-2">
-                  <button type='button' onClick={() => { StatusHandeler(task._id) }} className="min-h-[40px] flex-1 rounded-xl bg-purple-200 px-2 py-2 text-sm text-purple-800 hover:bg-purple-300 cursor-pointer">
+                  <button type='button' onClick={(e) => { e.preventDefault(), StatusHandeler(task._id) }} className="min-h-[40px] flex-1 rounded-xl bg-purple-200 px-2 py-2 text-sm text-purple-800 hover:bg-purple-300 cursor-pointer">
                     Complete
                   </button>
 
-                  <button onClick={()=>{navigation(`/edittask/${task._id}`)}} className="min-h-[40px] flex-1 rounded-xl bg-purple-200 px-2 py-2 text-sm text-purple-800 hover:bg-purple-300 cursor-pointer">
+                  <button onClick={() => { navigation(`/edittask/${task._id}`) }} className="min-h-[40px] flex-1 rounded-xl bg-purple-200 px-2 py-2 text-sm text-purple-800 hover:bg-purple-300 cursor-pointer">
                     Edit
                   </button>
 
