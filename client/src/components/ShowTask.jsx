@@ -26,14 +26,19 @@ function ShowTask() {
 
       if (Array.isArray(response.data)) {
         settasks(response.data);
-      } else {
-        console.error(
-          'Unexpected tasks response:',
-          response.data
-        );
-
+      } else if (
+        response.data &&
+        typeof response.data === 'object' &&
+        typeof response.data.message === 'string' &&
+        response.data.message.toLowerCase().includes('do not have any task')
+      ) {
+        // The backend uses a message to indicate an empty task list.
         settasks([]);
-        setErrorMessage('The server returned an unexpected task list.');
+        setErrorMessage('');
+      } else {
+        console.error('Unexpected tasks response:', response.data);
+        settasks([]);
+        setErrorMessage('Unable to read your task list. Please try again.');
       }
     } catch (error) {
       console.error(
@@ -93,7 +98,6 @@ function ShowTask() {
 
       const updatedTask = response.data;
 
-      // Update the task only if the API returns a task object.
       if (
         updatedTask &&
         typeof updatedTask === 'object' &&
@@ -105,8 +109,6 @@ function ShowTask() {
           )
         );
       } else {
-        // If the API doesn't return the updated task,
-        // fetch the current task list again.
         await gettask();
       }
     } catch (error) {
@@ -136,16 +138,12 @@ function ShowTask() {
   return (
     <div className="min-h-screen w-full bg-purple-50 p-4 sm:p-6">
       <div className="mx-auto w-full max-w-7xl">
-
-        {/* Header */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0">
             <p>Your Workspace</p>
-
             <h1 className="text-2xl font-bold sm:text-3xl">
               All Tasks
             </h1>
-
             <p className="text-sm sm:text-base">
               Every little step takes you closer to your goals
             </p>
@@ -170,7 +168,6 @@ function ShowTask() {
           </div>
         </div>
 
-        {/* Search */}
         <div className="my-6">
           <input
             type="text"
@@ -182,7 +179,6 @@ function ShowTask() {
           />
         </div>
 
-        {/* Task List */}
         <div>
           <p className="mb-4 text-lg font-semibold">
             Your Task List ({filteredTasks.length})
@@ -195,7 +191,6 @@ function ShowTask() {
           ) : errorMessage ? (
             <div className="rounded-xl bg-white p-6 text-center">
               <p className="text-red-600">{errorMessage}</p>
-
               <button
                 type="button"
                 onClick={gettask}
@@ -206,8 +201,7 @@ function ShowTask() {
             </div>
           ) : tasks.length === 0 ? (
             <div className="rounded-xl bg-white p-6 text-center text-gray-500">
-              <p>No tasks yet. Add your first task to get started!</p>
-
+              <p>You do not have any task.</p>
               <button
                 type="button"
                 onClick={() => navigation('/addTask')}
@@ -227,21 +221,15 @@ function ShowTask() {
                   key={task._id}
                   className="flex h-[360px] min-w-0 flex-col gap-4 rounded-2xl bg-white p-4 shadow-lg"
                 >
-                  {/* Icon and Priority */}
                   <div className="flex items-center justify-between gap-3">
                     <div className="flex h-[45px] w-[45px] shrink-0 items-center justify-center rounded-xl bg-purple-200">
-                      <FiBookOpen
-                        className="text-purple-600"
-                        size={22}
-                      />
+                      <FiBookOpen className="text-purple-600" size={22} />
                     </div>
-
                     <div className="max-w-[120px] break-words rounded-xl bg-amber-100 px-3 py-2 text-center text-sm">
                       {task.periority || 'No priority'}
                     </div>
                   </div>
 
-                  {/* Title and Status */}
                   <div className="flex min-w-0 items-start justify-between gap-2">
                     <h2 className="line-clamp-2 break-words text-xl font-bold">
                       {task.TaskTittle || 'Untitled task'}
@@ -257,14 +245,12 @@ function ShowTask() {
 
                   <hr className="border-fuchsia-100" />
 
-                  {/* Description */}
                   <div className="min-h-0 min-w-0 flex-1 overflow-hidden">
                     <p className="line-clamp-4 break-words text-base text-[#5e5c5c]">
                       {task.discription || 'No description provided.'}
                     </p>
                   </div>
 
-                  {/* Buttons */}
                   <div className="mt-auto flex flex-wrap items-center justify-end gap-2">
                     <button
                       type="button"
@@ -297,7 +283,6 @@ function ShowTask() {
             </div>
           )}
         </div>
-
       </div>
     </div>
   );
